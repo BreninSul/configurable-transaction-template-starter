@@ -22,17 +22,61 @@
  * SOFTWARE.
  */
 
+/**
+ * Package containing all the configurations related to the application
+ */
 package io.github.breninsul.configurabletransactiontemplatestarter.config
 
+import io.github.breninsul.configurabletransactiontemplatestarter.enums.TransactionIsolation
+import io.github.breninsul.configurabletransactiontemplatestarter.enums.TransactionPropagation
 import org.springframework.boot.context.properties.ConfigurationProperties
-
+import java.time.Duration
 
 /**
- * This class represents the properties settings for the configurable transaction template.
+ * This class is used to manage configurable transaction template properties
  *
- * @property enabled a Boolean value that determines whether the transaction is enabled or not.
- *                  Defaults to `true` if no value is provided during class instantiation.
- * @constructor Creates a new instance of the [ConfigurableTransactionTemplateProperties] with the `enabled` property set to the provided value.
+ * @property enabled Flag to denote if transaction template properties are enabled
+ * @property default Default transaction properties
  */
 @ConfigurationProperties("spring.transaction.configurable")
-class ConfigurableTransactionTemplateProperties (var enabled:Boolean=true)
+data class ConfigurableTransactionTemplateProperties(
+    /**
+     *  Flag to denote if transaction template properties are enabled
+     */
+    var enabled: Boolean = true,
+
+    /**
+     * Default transaction properties
+     */
+    var default:Default =Default()
+    ) {
+    /**
+     * This class is used to manage default transaction properties
+     *
+     * @property propagation Transaction propagation
+     * @property isolation Transaction isolation
+     * @property readOnly Flag to denote if transaction is read-only
+     * @property timeout Transaction timeout
+     */
+    data class Default(
+        /**
+         * Transaction propagation
+         */
+        var propagation: TransactionPropagation =DefaultTransactionSettings.propagation,
+
+        /**
+         * Transaction isolation
+         */
+        var isolation: TransactionIsolation =DefaultTransactionSettings.isolation,
+
+        /**
+         * Flag to denote if transaction is read-only
+         */
+        val readOnly: Boolean =DefaultTransactionSettings.readOnly,
+
+        /**
+         * Transaction timeout
+         */
+        val timeout: Duration = DefaultTransactionSettings.timeout
+    )
+}

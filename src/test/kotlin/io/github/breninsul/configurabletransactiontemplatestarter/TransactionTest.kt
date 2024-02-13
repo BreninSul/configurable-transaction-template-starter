@@ -53,7 +53,7 @@ import java.util.logging.Logger
  */
 @EnableTransactionManagement
 @ExtendWith(SpringExtension::class)
-@Import(DataSourceAutoConfiguration::class, ConfigurableTransactionAutoConfiguration::class, TransactionAutoConfiguration::class, TestConfig::class)
+@Import(TestConfig::class,DataSourceAutoConfiguration::class, ConfigurableTransactionAutoConfiguration::class, TransactionAutoConfiguration::class)
 class TransactionTest {
     protected val logger = Logger.getLogger(this.javaClass.name)
 

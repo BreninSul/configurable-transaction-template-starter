@@ -23,6 +23,7 @@
  */
 package io.github.breninsul.configurabletransactiontemplatestarter.template
 
+import io.github.breninsul.configurabletransactiontemplatestarter.config.DefaultTransactionSettings
 import io.github.breninsul.configurabletransactiontemplatestarter.enums.TransactionIsolation
 import io.github.breninsul.configurabletransactiontemplatestarter.enums.TransactionPropagation
 import org.springframework.transaction.PlatformTransactionManager
@@ -48,10 +49,10 @@ open class TransactionTemplateFactory(protected val transactionManager: Platform
      * @return a [TransactionOperations] instance configured with the provided parameters.
      */
     fun create(
-        readOnly: Boolean = false,
-        propagation: TransactionPropagation = TransactionPropagation.REQUIRED,
-        isolation: TransactionIsolation = TransactionIsolation.DEFAULT,
-        timeout: Duration = Duration.ofSeconds(TransactionDefinition.TIMEOUT_DEFAULT.toLong()),
+        readOnly: Boolean = DefaultTransactionSettings.readOnly,
+        propagation: TransactionPropagation = DefaultTransactionSettings.propagation,
+        isolation: TransactionIsolation = DefaultTransactionSettings.isolation,
+        timeout: Duration = DefaultTransactionSettings.timeout,
     ): TransactionOperations {
         val transactionTemplate = TransactionTemplate(transactionManager)
         transactionTemplate.isReadOnly = readOnly
