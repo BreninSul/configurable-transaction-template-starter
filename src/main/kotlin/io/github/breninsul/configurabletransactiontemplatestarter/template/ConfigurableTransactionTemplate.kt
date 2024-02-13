@@ -24,6 +24,7 @@
 
 package io.github.breninsul.configurabletransactiontemplatestarter.template
 
+import io.github.breninsul.configurabletransactiontemplatestarter.config.DefaultTransactionSettings
 import io.github.breninsul.configurabletransactiontemplatestarter.enums.TransactionIsolation
 import io.github.breninsul.configurabletransactiontemplatestarter.enums.TransactionPropagation
 import org.springframework.transaction.TransactionDefinition
@@ -43,10 +44,10 @@ import java.util.function.Consumer
 */
 open class ConfigurableTransactionTemplate(
     protected val factory: TransactionTemplateFactory,
-    protected val defPropagation: TransactionPropagation = TransactionPropagation.REQUIRED,
-    protected val defIsolation: TransactionIsolation = TransactionIsolation.DEFAULT,
-    protected val defReadOnly: Boolean = false,
-    protected val defTimeout: Duration = Duration.ofSeconds(TransactionDefinition.TIMEOUT_DEFAULT.toLong()),
+    protected val defPropagation: TransactionPropagation = DefaultTransactionSettings.propagation,
+    protected val defIsolation: TransactionIsolation = DefaultTransactionSettings.isolation,
+    protected val defReadOnly: Boolean = DefaultTransactionSettings.readOnly,
+    protected val defTimeout: Duration = DefaultTransactionSettings.timeout,
 ) : TransactionOperations {
     /**
      * Execute the given callback specifying transaction semantics along the way.

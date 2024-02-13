@@ -30,6 +30,7 @@ import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.transaction.PlatformTransactionManager
 
@@ -38,6 +39,7 @@ import org.springframework.transaction.PlatformTransactionManager
  */
 @AutoConfiguration
 @ConditionalOnProperty(prefix = "spring.transaction.configurable", name = ["enabled"], matchIfMissing = true, havingValue = "true")
+@EnableConfigurationProperties(ConfigurableTransactionTemplateProperties::class)
 class ConfigurableTransactionAutoConfiguration {
     /**
      * Creates a TransactionTemplateFactory bean if a PlatformTransactionManager bean exists and a TransactionTemplateFactory bean does not exist.
@@ -54,12 +56,13 @@ class ConfigurableTransactionAutoConfiguration {
     /**
      * Creates a ConfigurableTransactionTemplate bean if a TransactionTemplateFactory bean exists and a ConfigurableTransactionTemplate bean does not exist.
      * @param factory a TransactionTemplateFactory bean.
+     * @param properties a ConfigurableTransactionTemplateProperties bean.
      * @return a ConfigurableTransactionTemplate bean.
      */
     @Bean("configurableTransactionTemplate")
-    @ConditionalOnBean(PlatformTransactionManager::class)
+    @ConditionalOnBean(TransactionTemplateFactory::class)
     @ConditionalOnMissingBean(ConfigurableTransactionTemplate::class)
-    fun configurableTransactionTemplate(factory: TransactionTemplateFactory): ConfigurableTransactionTemplate {
-        return ConfigurableTransactionTemplate(factory)
+    fun configurableTransactionTemplate(factory: TransactionTemplateFactory,properties:ConfigurableTransactionTemplateProperties): ConfigurableTransactionTemplate {
+        return ConfigurableTransactionTemplate(factory,properties.default.propagation,properties.default.isolation,properties.default.readOnly,properties.default.timeout)
     }
 }
