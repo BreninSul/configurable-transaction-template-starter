@@ -29,11 +29,21 @@ import io.github.breninsul.configurabletransactiontemplatestarter.template.Trans
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.transaction.PlatformTransactionManager
 
+/**
+ * This class provides automatic configuration for configurable transactions.
+ */
 @AutoConfiguration
-class TransactionAutoConfiguration {
+@ConditionalOnProperty(prefix = "spring.transaction.configurable", name = ["enabled"], matchIfMissing = true, havingValue = "true")
+class ConfigurableTransactionAutoConfiguration {
+    /**
+     * Creates a TransactionTemplateFactory bean if a PlatformTransactionManager bean exists and a TransactionTemplateFactory bean does not exist.
+     * @param transactionManager a PlatformTransactionManager bean.
+     * @return a TransactionTemplateFactory bean.
+     */
     @Bean("transactionTemplateFactory")
     @ConditionalOnBean(PlatformTransactionManager::class)
     @ConditionalOnMissingBean(TransactionTemplateFactory::class)
@@ -41,9 +51,14 @@ class TransactionAutoConfiguration {
         return TransactionTemplateFactory(transactionManager)
     }
 
+    /**
+     * Creates a ConfigurableTransactionTemplate bean if a TransactionTemplateFactory bean exists and a ConfigurableTransactionTemplate bean does not exist.
+     * @param factory a TransactionTemplateFactory bean.
+     * @return a ConfigurableTransactionTemplate bean.
+     */
     @Bean("configurableTransactionTemplate")
     @ConditionalOnBean(PlatformTransactionManager::class)
-    @ConditionalOnMissingBean(TransactionTemplateFactory::class)
+    @ConditionalOnMissingBean(ConfigurableTransactionTemplate::class)
     fun configurableTransactionTemplate(factory: TransactionTemplateFactory): ConfigurableTransactionTemplate {
         return ConfigurableTransactionTemplate(factory)
     }

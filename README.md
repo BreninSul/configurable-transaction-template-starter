@@ -1,16 +1,35 @@
-# Getting Started
+This is small lib for easy configuring Spring TransactionTemplate params for each execution such as 
+readOnly
+propagation
+isolation
+timeout
 
-### Reference Documentation
+Configure with properties
 
-For further reference, please consider the following sections:
+| Parameter                                 | Type     | Description                                                                                                                                                     |
+|-------------------------------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `spring.transaction.configurable.enabled` | boolean  | Enable/disable autoconfig for this starter                                                                                                                      |
 
-* [Official Gradle documentation](https://docs.gradle.org)
-* [Spring Boot Gradle Plugin Reference Guide](https://docs.spring.io/spring-boot/docs/3.2.2/gradle-plugin/reference/html/)
-* [Create an OCI image](https://docs.spring.io/spring-boot/docs/3.2.2/gradle-plugin/reference/html/#build-image)
 
-### Additional Links
 
-These additional references should also help you:
+Beans in Spring Boot will be automatically registered in ConfigurableTransactionAutoConfiguration with defined properties ConfigurableTransactionTemplateProperties (prefix synchronisation).
 
-* [Gradle Build Scans – insights for your project's build](https://scans.gradle.com#gradle)
+add the following dependency:
 
+````kotlin
+dependencies {
+//Other dependencies
+    implementation("io.github.breninsul:configurable-transaction-template-starter:${version}")
+//Other dependencies
+}
+
+````
+# Example of usage
+
+````kotlin
+val trxTemplate: ConfigurableTransactionTemplate
+trxTemplate.execute(readOnly = true) {
+    jdbcClient.sql("do read only sql")
+        .update()
+}
+````

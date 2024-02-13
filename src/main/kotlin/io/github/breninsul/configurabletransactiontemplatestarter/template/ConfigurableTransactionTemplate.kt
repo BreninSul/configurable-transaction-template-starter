@@ -22,38 +22,67 @@
  * SOFTWARE.
  */
 
-package io.github.breninsul.configurabletransactiontemplatestarter
+package io.github.breninsul.configurabletransactiontemplatestarter.template
 
+import io.github.breninsul.configurabletransactiontemplatestarter.enums.TransactionIsolation
+import io.github.breninsul.configurabletransactiontemplatestarter.enums.TransactionPropagation
 import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.TransactionStatus
-import org.springframework.transaction.annotation.Isolation
-import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.support.TransactionCallback
 import org.springframework.transaction.support.TransactionOperations
 import java.time.Duration
 import java.util.function.Consumer
 
+/**
+ * This is a customizable implementation of [TransactionOperations], allowing to specify transaction properties like
+ * propagation behavior, isolation level, read-only flag and timeout directly in the execution call.
+ * This is particularly useful for prototyping, tests and for cases where programmatic transaction demarcation is required.
+ *
+ * @property factory Factory for creating transaction templates.
+ * @constructor Creates a new instance of [ConfigurableTransactionTemplate] with default transaction properties.
+*/
 open class ConfigurableTransactionTemplate(
     protected val factory: TransactionTemplateFactory,
-    protected val defPropagation: Propagation = Propagation.REQUIRED,
-    protected val defIsolation: Isolation = Isolation.DEFAULT,
+    protected val defPropagation: TransactionPropagation = TransactionPropagation.REQUIRED,
+    protected val defIsolation: TransactionIsolation = TransactionIsolation.DEFAULT,
     protected val defReadOnly: Boolean = false,
     protected val defTimeout: Duration = Duration.ofSeconds(TransactionDefinition.TIMEOUT_DEFAULT.toLong()),
-): TransactionOperations {
+) : TransactionOperations {
+    /**
+     * Execute the given callback specifying transaction semantics along the way.
+     *
+     * @param readOnly The read-only flag.
+     * @param propagation The propagation behavior.
+     * @param isolation The isolation level.
+     * @param timeout The timeout for this transaction.
+     * @param action The callback object which specifies the unit of work.
+     * @tparam T The result type.
+     * @return A result object returned by the callback, or null if none.
+     */
     open fun <T : Any?> execute(
         readOnly: Boolean = defReadOnly,
-        propagation: Propagation = defPropagation,
-        isolation: Isolation = defIsolation,
+        propagation: TransactionPropagation = defPropagation,
+        isolation: TransactionIsolation = defIsolation,
         timeout: Duration = defTimeout,
         action: TransactionCallback<T>,
     ): T? {
-        return factory.create(readOnly, propagation, isolation, timeout).execute(action)
+        val template = factory.create(readOnly, propagation, isolation, timeout)
+        return template.execute(action)
     }
 
+    /**
+     * Execute the given callback without any result, specifying transaction semantics along the way.
+     *
+     * @param readOnly The read-only flag.
+     * @param propagation The propagation behavior.
+     * @param isolation The isolation level.
+     * @param timeout The timeout for this transaction.
+     * @param action The callback object which specifies the unit of work. The result will be ignored, if any.
+     */
     open fun executeWithoutResult(
         readOnly: Boolean = defReadOnly,
-        propagation: Propagation = defPropagation,
-        isolation: Isolation = defIsolation,
+        propagation: TransactionPropagation = defPropagation,
+        isolation: TransactionIsolation = defIsolation,
         timeout: Duration = defTimeout,
         action: Consumer<TransactionStatus?>,
     ) {
@@ -62,14 +91,20 @@ open class ConfigurableTransactionTemplate(
             propagation,
             isolation,
             timeout,
-            { status: TransactionStatus? ->
-                action.accept(status)
-                null
-            },
-        )
+        ) { status: TransactionStatus? ->
+            action.accept(status)
+            null
+        }
     }
 
+    /**
+     * Execute the given action, handling the transaction with the default properties.
+     *
+     * @param action The callback object which defines the unit of work.
+     * @tparam T The result type.
+     * @return A result object returned by the callback, or `null` if none.
+     */
     override fun <T : Any?> execute(action: TransactionCallback<T>): T? {
-        return factory.create(defReadOnly,defPropagation,defIsolation,defTimeout).execute(action)
+        return factory.create(defReadOnly, defPropagation, defIsolation, defTimeout).execute(action)
     }
 }

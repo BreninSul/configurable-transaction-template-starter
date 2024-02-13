@@ -1,1 +1,1 @@
-rootProject.name = "configurabletransactiontemplatestarter"
+rootProject.name = "configurable-transaction-template-starter"

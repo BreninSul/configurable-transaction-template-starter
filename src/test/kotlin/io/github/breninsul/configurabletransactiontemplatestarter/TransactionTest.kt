@@ -22,76 +22,129 @@
  * SOFTWARE.
  */
 
-package io.github.breninsul.synchronizationstarter.postgresql
+package io.github.breninsul.configurabletransactiontemplatestarter
 
-import io.github.breninsul.synchronizationstarter.SyncRunner
-import io.github.breninsul.synchronizationstarter.service.db.PostgresSQLSynchronisationService
-import io.github.breninsul.synchronizationstarter.service.sync
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Test
+import io.github.breninsul.configurabletransactiontemplatestarter.config.ConfigurableTransactionAutoConfiguration
+import io.github.breninsul.configurabletransactiontemplatestarter.enums.TransactionPropagation
+import io.github.breninsul.configurabletransactiontemplatestarter.template.ConfigurableTransactionTemplate
+import org.junit.jupiter.api.*
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+import org.springframework.boot.autoconfigure.transaction.TransactionAutoConfiguration
 import org.springframework.context.annotation.Import
+import org.springframework.jdbc.UncategorizedSQLException
+import org.springframework.jdbc.core.simple.JdbcClient
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import org.springframework.transaction.annotation.EnableTransactionManagement
+import org.springframework.transaction.annotation.TransactionManagementConfigurer
 import org.testcontainers.containers.PostgreSQLContainer
-import java.time.Duration
-import java.time.LocalDateTime
-import java.util.logging.Level
+import java.util.function.Function
 import java.util.logging.Logger
-import javax.sql.DataSource
-import kotlin.concurrent.thread
 
+/**
+ * Test case for transactions.
+ *
+ * @property logger Logger instance for this class.
+ * @property jdbcClient Jdbc Client.
+ * @property trxTemplate Template for transaction management.
+ */
+@EnableTransactionManagement
 @ExtendWith(SpringExtension::class)
-@Import(DataSourceAutoConfiguration::class)
-class PostgresSqlSynchronisationServiceTest {
+@Import(DataSourceAutoConfiguration::class, ConfigurableTransactionAutoConfiguration::class, TransactionAutoConfiguration::class, TestConfig::class)
+class TransactionTest {
     protected val logger = Logger.getLogger(this.javaClass.name)
 
     @Autowired
-    lateinit var dataSource: DataSource
+    lateinit var jdbcClient: JdbcClient
 
-    fun getSyncService(): PostgresSQLSynchronisationService  {
-        return PostgresSQLSynchronisationService(dataSource, Duration.ofMillis(100))
-    }
+    @Autowired
+    lateinit var trxTemplate: ConfigurableTransactionTemplate
 
+    class ReadOnlyException(cause: Throwable) : RuntimeException(cause)
+
+    /**
+     * Test case to check read-only transaction behavior.
+     */
     @Test
-    fun `test sync the same service`() {
-        val syncService = getSyncService()
-        // Call two threads with the same task
-        val result1= SyncRunner.runSyncTask(syncService, Duration.ofSeconds(1), mutableListOf())
-        val result2= SyncRunner.runSyncTask(syncService, Duration.ofSeconds(1), mutableListOf())
+    fun `testReadOnly`() {
+        val i: TransactionManagementConfigurer
+        assertThrows<ReadOnlyException> {
+            try {
+                trxTemplate.execute(readOnly = true) {
+                    jdbcClient.sql("create table test(test_col text)")
+                        .update()
+                }
+            } catch (t: UncategorizedSQLException) {
+                mapException(t, "ERROR: cannot execute .* in a read-only transaction") { ReadOnlyException(it) }
+            }
+        }
+        assertDoesNotThrow {
+            trxTemplate.execute(readOnly = false) {
+                jdbcClient.sql("create table test(test_col text)")
+                    .update()
+                jdbcClient.sql("insert into test(test_col) values ('test')")
+                    .update()
+                it.setRollbackOnly()
+            }
+        }
+    }
 
-        // wait till end
-        result1.job!!.join()
-        result2.job!!.join()
-        // we can't be sure about threads order, sort start and end time
-        val timePairs = listOf(result1.toTimePair(), result2.toTimePair()).sortedBy { it.first }
-        // check that there we ordered process
-        assert(timePairs[1].first > timePairs[0].second)
-        val delay = Duration.between(timePairs[0].second, timePairs[1].first)
-        logger.log(Level.INFO, "Delay was ${delay.toMillis()}")
-    }
+    /**
+     * Test case to check transaction id behavior.
+     */
     @Test
-    fun `test sync diff services`() {
-        val result1= SyncRunner.runSyncTask(getSyncService(), Duration.ofSeconds(1), mutableListOf())
-        val result2= SyncRunner.runSyncTask(getSyncService(), Duration.ofSeconds(1), mutableListOf())
-        // Call two threads with the same task
-        // wait till end
-        result1.job!!.join()
-        result2.job!!.join()
-        // we can't be sure about threads order, sort start and end time
-        val timePairs = listOf(result1.toTimePair(), result2.toTimePair()).sortedBy { it.first }
-        // check that there we ordered process
-        assert(timePairs[1].first > timePairs[0].second)
-        val delay = Duration.between(timePairs[0].second, timePairs[1].first)
-        logger.log(Level.INFO, "Delay was ${delay.toMillis()}")
+    fun `testTrxId`() {
+        val i: TransactionManagementConfigurer
+        trxTemplate.execute(readOnly = true, propagation = TransactionPropagation.REQUIRED) { _ ->
+            val parentId =
+                jdbcClient
+                    .sql("select txid_current()")
+                    .query(Long::class.java)
+                    .single()
+            trxTemplate.execute(readOnly = true, propagation = TransactionPropagation.REQUIRES_NEW) {
+                val newId =
+                    jdbcClient
+                        .sql("select txid_current()")
+                        .query(Long::class.java)
+                        .single()
+                Assertions.assertNotEquals(parentId, newId)
+            }
+            trxTemplate.execute(readOnly = true, propagation = TransactionPropagation.REQUIRED) {
+                val sameId =
+                    jdbcClient
+                        .sql("select txid_current()")
+                        .query(Long::class.java)
+                        .single()
+                Assertions.assertEquals(parentId, sameId)
+            }
+        }
     }
+
+    /**
+     * A utility method to map exceptions.
+     */
+    private fun mapException(
+        t: Throwable,
+        expectedRegex: String,
+        exceptionSupplier: Function<Throwable, Throwable>,
+    ) {
+        val isReadOnly = (t.message ?: "").matches(".*$expectedRegex.*".toRegex())
+        if (isReadOnly) {
+            throw exceptionSupplier.apply(t)
+        } else {
+            throw t
+        }
+    }
+
     companion object {
         val postgres: PostgreSQLContainer<*> = PostgreSQLContainer("postgres:16.1-alpine3.19")
 
+        /**
+         * Configures dynamic properties for the test environment.
+         */
         @DynamicPropertySource
         @JvmStatic
         fun configureProperties(registry: DynamicPropertyRegistry) {

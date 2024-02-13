@@ -21,36 +21,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package io.github.breninsul.configurabletransactiontemplatestarter
 
-import org.springframework.boot.test.context.TestConfiguration
-import org.springframework.context.annotation.Bean
-import org.springframework.jdbc.core.JdbcTemplate
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
-import org.springframework.jdbc.core.simple.JdbcClient
-import org.springframework.jdbc.support.JdbcTransactionManager
-import javax.sql.DataSource
+package io.github.breninsul.configurabletransactiontemplatestarter.config
 
-@TestConfiguration
-class TestConfig {
-    @Bean
-    fun jdbcTransactionManager(dataSource: DataSource): JdbcTransactionManager {
-        return JdbcTransactionManager(dataSource)
-    }
+import org.springframework.boot.context.properties.ConfigurationProperties
 
-    @Bean
-    fun namedParameterJdbcTemplate(jdbcTemplate: JdbcTemplate): NamedParameterJdbcTemplate {
-        return NamedParameterJdbcTemplate(jdbcTemplate)
-    }
-
-    @Bean
-    fun jdbcTemplate(dataSource: DataSource): JdbcTemplate {
-        val jdbcTemplate = JdbcTemplate(dataSource)
-        return jdbcTemplate
-    }
-
-    @Bean
-    fun JdbcClient(template: NamedParameterJdbcTemplate): JdbcClient {
-        return JdbcClient.create(template)
-    }
-}
+@ConfigurationProperties("spring.transaction.configurable")
+class ConfigurableTransactionTemplateProperties (var enabled:Boolean=true)
