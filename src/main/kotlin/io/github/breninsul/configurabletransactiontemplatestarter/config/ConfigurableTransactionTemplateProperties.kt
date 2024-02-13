@@ -26,5 +26,13 @@ package io.github.breninsul.configurabletransactiontemplatestarter.config
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 
+
+/**
+ * This class represents the properties settings for the configurable transaction template.
+ *
+ * @property enabled a Boolean value that determines whether the transaction is enabled or not.
+ *                  Defaults to `true` if no value is provided during class instantiation.
+ * @constructor Creates a new instance of the [ConfigurableTransactionTemplateProperties] with the `enabled` property set to the provided value.
+ */
 @ConfigurationProperties("spring.transaction.configurable")
 class ConfigurableTransactionTemplateProperties (var enabled:Boolean=true)
