@@ -68,7 +68,10 @@ class ConfigurableTransactionAutoConfiguration {
     @Bean("configurableTransactionTemplate")
     @ConditionalOnBean(TransactionTemplateFactory::class)
     @ConditionalOnMissingBean(ConfigurableTransactionTemplate::class)
-    fun configurableTransactionTemplate(factory: TransactionTemplateFactory,properties:ConfigurableTransactionTemplateProperties): ConfigurableTransactionTemplate {
-        return ConfigurableTransactionTemplate(factory,properties.default.propagation,properties.default.isolation,properties.default.readOnly,properties.default.timeout)
+    fun configurableTransactionTemplate(
+        factory: TransactionTemplateFactory,
+        properties: ConfigurableTransactionTemplateProperties,
+    ): ConfigurableTransactionTemplate {
+        return ConfigurableTransactionTemplate(factory, properties.default.propagation, properties.default.isolation, properties.default.readOnly, properties.default.timeout)
     }
 }

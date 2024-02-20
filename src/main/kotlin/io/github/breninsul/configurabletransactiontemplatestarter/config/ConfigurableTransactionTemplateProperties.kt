@@ -44,12 +44,11 @@ data class ConfigurableTransactionTemplateProperties(
      *  Flag to denote if transaction template properties are enabled
      */
     var enabled: Boolean = true,
-
     /**
      * Default transaction properties
      */
-    var default:Default =Default()
-    ) {
+    var default: Default = Default(),
+) {
     /**
      * This class is used to manage default transaction properties
      *
@@ -62,21 +61,18 @@ data class ConfigurableTransactionTemplateProperties(
         /**
          * Transaction propagation
          */
-        var propagation: TransactionPropagation =DefaultTransactionSettings.propagation,
-
+        var propagation: TransactionPropagation = DefaultTransactionSettings.propagation,
         /**
          * Transaction isolation
          */
-        var isolation: TransactionIsolation =DefaultTransactionSettings.isolation,
-
+        var isolation: TransactionIsolation = DefaultTransactionSettings.isolation,
         /**
          * Flag to denote if transaction is read-only
          */
-        val readOnly: Boolean =DefaultTransactionSettings.readOnly,
-
+        val readOnly: Boolean = DefaultTransactionSettings.readOnly,
         /**
          * Transaction timeout
          */
-        val timeout: Duration = DefaultTransactionSettings.timeout
+        val timeout: Duration = DefaultTransactionSettings.timeout,
     )
 }

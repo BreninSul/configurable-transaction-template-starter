@@ -27,7 +27,6 @@ import io.github.breninsul.configurabletransactiontemplatestarter.config.Default
 import io.github.breninsul.configurabletransactiontemplatestarter.enums.TransactionIsolation
 import io.github.breninsul.configurabletransactiontemplatestarter.enums.TransactionPropagation
 import org.springframework.transaction.PlatformTransactionManager
-import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.support.TransactionOperations
 import org.springframework.transaction.support.TransactionTemplate
 import java.time.Duration
@@ -38,7 +37,6 @@ import java.time.Duration
  * @property transactionManager the platform transaction manager.
  */
 open class TransactionTemplateFactory(protected val transactionManager: PlatformTransactionManager) {
-
     /**
      * Creates a new [TransactionOperations] object with the given parameters.
      *

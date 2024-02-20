@@ -27,7 +27,6 @@ package io.github.breninsul.configurabletransactiontemplatestarter.template
 import io.github.breninsul.configurabletransactiontemplatestarter.config.DefaultTransactionSettings
 import io.github.breninsul.configurabletransactiontemplatestarter.enums.TransactionIsolation
 import io.github.breninsul.configurabletransactiontemplatestarter.enums.TransactionPropagation
-import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.TransactionStatus
 import org.springframework.transaction.support.TransactionCallback
 import org.springframework.transaction.support.TransactionOperations

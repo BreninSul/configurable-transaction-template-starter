@@ -32,10 +32,13 @@ import java.time.Duration
 object DefaultTransactionSettings {
     @JvmStatic
     val propagation: TransactionPropagation = TransactionPropagation.REQUIRED
+
     @JvmStatic
     val isolation: TransactionIsolation = TransactionIsolation.DEFAULT
+
     @JvmStatic
     val readOnly: Boolean = false
+
     @JvmStatic
     val timeout: Duration = Duration.ofSeconds(TransactionDefinition.TIMEOUT_DEFAULT.toLong())
 }
