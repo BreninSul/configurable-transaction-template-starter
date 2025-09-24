@@ -59,7 +59,7 @@ public class JavaExample {
 
 
     public void executeTestTransaction() {
-        trxTemplate.execute(
+        String result=trxTemplate.execute(
                 true,
                 DefaultTransactionSettings.getPropagation(),
                 DefaultTransactionSettings.getIsolation(),
@@ -71,8 +71,10 @@ public class JavaExample {
                             .single();
                     return selected;
                 });
+        System.out.println(result);
     }
 }
+
 
 ````
 
