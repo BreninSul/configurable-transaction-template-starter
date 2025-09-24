@@ -36,3 +36,73 @@ trxTemplate.execute(readOnly = true) {
         .update()
 }
 ````
+
+# Or java 
+````java
+package io.github.breninsul.configurabletransactiontemplatestarter;
+
+import io.github.breninsul.configurabletransactiontemplatestarter.config.DefaultTransactionSettings;
+import io.github.breninsul.configurabletransactiontemplatestarter.template.ConfigurableTransactionTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.stereotype.Component;
+
+import java.sql.Types;
+
+@Component
+public class JavaExample {
+    @Autowired
+    private JdbcClient jdbcClient;
+
+    @Autowired
+    ConfigurableTransactionTemplate trxTemplate;
+
+
+    public void executeTestTransaction() {
+        trxTemplate.execute(
+                true,
+                DefaultTransactionSettings.getPropagation(),
+                DefaultTransactionSettings.getIsolation(),
+                DefaultTransactionSettings.getTimeout()
+                ,t -> {
+                    String selected=jdbcClient.sql("Select :param")
+                            .param("param", "test", Types.VARCHAR)
+                            .query(String.class)
+                            .single();
+                    return selected;
+                });
+    }
+}
+
+````
+
+# Transactions can be executed in transactions
+
+````kotlin
+  fun `testTrxId`() {
+        val i: TransactionManagementConfigurer
+        trxTemplate.execute(readOnly = true, propagation = TransactionPropagation.REQUIRED) { _ ->
+            val parentId =
+                jdbcClient
+                    .sql("select txid_current()")
+                    .query(Long::class.java)
+                    .single()
+            trxTemplate.execute(readOnly = true, propagation = TransactionPropagation.REQUIRES_NEW) {
+                val newId =
+                    jdbcClient
+                        .sql("select txid_current()")
+                        .query(Long::class.java)
+                        .single()
+                Assertions.assertNotEquals(parentId, newId)
+            }
+            trxTemplate.execute(readOnly = true, propagation = TransactionPropagation.REQUIRED) {
+                val sameId =
+                    jdbcClient
+                        .sql("select txid_current()")
+                        .query(Long::class.java)
+                        .single()
+                Assertions.assertEquals(parentId, sameId)
+            }
+        }
+    }
+````
