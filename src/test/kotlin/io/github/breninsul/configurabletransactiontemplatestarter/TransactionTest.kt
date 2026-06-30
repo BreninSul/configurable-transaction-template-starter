@@ -30,8 +30,8 @@ import io.github.breninsul.configurabletransactiontemplatestarter.template.Confi
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
-import org.springframework.boot.autoconfigure.transaction.TransactionAutoConfiguration
+import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration
+import org.springframework.boot.transaction.autoconfigure.TransactionAutoConfiguration
 import org.springframework.context.annotation.Import
 import org.springframework.jdbc.UncategorizedSQLException
 import org.springframework.jdbc.core.simple.JdbcClient

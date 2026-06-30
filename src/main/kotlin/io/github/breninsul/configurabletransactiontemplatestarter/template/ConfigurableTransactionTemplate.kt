@@ -86,7 +86,7 @@ open class ConfigurableTransactionTemplate(
         timeout: Duration = defTimeout,
         action: Consumer<TransactionStatus?>,
     ) {
-        execute<Any>(
+        execute<Any?>(
             readOnly,
             propagation,
             isolation,
@@ -104,7 +104,7 @@ open class ConfigurableTransactionTemplate(
      * @tparam T The result type.
      * @return A result object returned by the callback, or `null` if none.
      */
-    override fun <T : Any?> execute(action: TransactionCallback<T>): T? {
+    override fun <T : Any?> execute(action: TransactionCallback<T>): T {
         return factory.create(defReadOnly, defPropagation, defIsolation, defTimeout).execute(action)
     }
 }
